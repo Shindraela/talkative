@@ -1,2 +1,2 @@
 # talkative
-Chat web app in React/Typescript
+Chat web app in React
