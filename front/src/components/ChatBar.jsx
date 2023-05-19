@@ -4,7 +4,9 @@ export const ChatBar = ({ socket }) => {
 	const [users, setUsers] = useState([])
 
   useEffect(() => {
-    socket.on('newUserResponse', (data) => setUsers(data))
+		socket.on('newUserResponse', (data) => {
+			setUsers(data)
+		})
   }, [socket, users])
 
   return (

@@ -23,7 +23,8 @@ export const ChatPage = ({ socket }) => {
 
   return (
     <div className="chat">
-      <ChatBar socket={socket} />
+			<ChatBar socket={socket} />
+
       <div className="chat__main">
         <ChatBody messages={messages} typingStatus={typingStatus} lastMessageRef={lastMessageRef} />
         <ChatFooter socket={socket} />

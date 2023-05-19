@@ -1,25 +1,25 @@
 const express = require('express')
-const app = express()
-const PORT = 5000
-
-const http = require('http').Server(app)
+const http = require('http')
 const cors = require('cors')
+const app = express()
+const PORT = 4000
 
-app.use(cors())
-
-const socketIO = require('socket.io')(http, {
+const server = http.createServer(app)
+const { Server } = require('socket.io')
+const io = new Server(server, {
 	cors: {
 		origin: 'http://localhost:5173'
 	}
 })
+app.use(cors())
 
 let users = []
 
-socketIO.on('connection', (socket) => {
+io.on('connection', (socket) => {
   console.log(`⚡: ${socket.id} user just connected!`)
   // Listen and log the message to the console
   socket.on('message', (data) => {
-    socketIO.emit('messageResponse', data)
+    io.emit('messageResponse', data)
 	})
 
 	socket.on('typing', (data) => socket.broadcast.emit('typingResponse', data))
@@ -30,8 +30,10 @@ socketIO.on('connection', (socket) => {
 	 * and send the list of users to the client
 	 */
 	socket.on('newUser', (data) => {
-		users.push(data)
-    socketIO.emit('newUserResponse', users)
+		const socketID = socket.id
+		users.push({ socketID, ...data })
+
+    io.emit('newUserResponse', users)
   })
 
   socket.on('disconnect', () => {
@@ -39,17 +41,11 @@ socketIO.on('connection', (socket) => {
     // Update the list of users when a user disconnects from the server
 		// And send the list of users to the client
     users = users.filter((user) => user.socketID !== socket.id)
-    socketIO.emit('newUserResponse', users)
+    io.emit('newUserResponse', users)
     socket.disconnect()
   })
 })
 
-app.get('/api', (req, res) => {
-  res.json({
-    message: 'Hello world',
-  })
-})
-
-app.listen(PORT, () => {
+io.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`)
 })
