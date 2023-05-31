@@ -3,7 +3,13 @@ import { useState } from 'react'
 export const ChatFooter = ({ socket }) => {
   const [message, setMessage] = useState('')
 
-  const handleTyping = () => socket.emit('typing', `${localStorage.getItem('userName')} is typing`)
+	const handleTyping = () => {
+		if (message.length > 1) {
+			socket.emit('typing', `${localStorage.getItem('userName')} is typing`)
+		} else {
+			socket.emit('typing', null)
+		}
+	}
 
   const handleSendMessage = (e) => {
     e.preventDefault()

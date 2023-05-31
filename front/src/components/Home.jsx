@@ -1,30 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ConnectionState } from '../sockets/ConnectionState'
-import { ConnectionManager } from '../sockets/ConnectionManager'
+import Talkative from '../assets/logo_talkative.svg'
 
 export const Home = ({ socket }) => {
   const navigate = useNavigate()
 	const [userName, setUserName] = useState('')
-	const [isConnected, setIsConnected] = useState(socket.connected)
-
-  useEffect(() => {
-    const onConnect = () => {
-      setIsConnected(true)
-    }
-
-    const onDisconnect = () => {
-      setIsConnected(false)
-    }
-
-    socket.on('connect', onConnect)
-    socket.on('disconnect', onDisconnect)
-
-    return () => {
-      socket.off('connect', onConnect)
-      socket.off('disconnect', onDisconnect)
-    }
-  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -33,25 +13,32 @@ export const Home = ({ socket }) => {
     navigate('/chat')
 	}
 
-	return (
-		<>
-			<ConnectionState isConnected={isConnected} />
+	const connect = () => {
+		socket.connect()
+		socket.emit('join', 'chats')
+	}
 
+	return (
+		<div className="home">
 			<form className="home__container" onSubmit={handleSubmit}>
-				<h2 className="home__header">Sign in to Open Chat</h2>
+				<h2 className="home__header">
+					<img alt="Logo Talkative" src={Talkative} />
+					<div>Talkative</div>
+				</h2>
+
 				<label htmlFor="username">Username</label>
 				<input
 					type="text"
-					minLength={6}
+					minLength={5}
 					name="username"
 					id="username"
 					className="username__input"
 					value={userName}
 					onChange={(e) => setUserName(e.target.value)}
-					/>
+				/>
 
-				<ConnectionManager />
+				<button className="home__cta" onClick={ connect }>Connect</button>
 			</form>
-		</>
+		</div>
   )
 }

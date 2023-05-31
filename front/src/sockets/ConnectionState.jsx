@@ -1,3 +1,3 @@
 export const ConnectionState = ({ isConnected }) => {
-  return <p>State: { '' + isConnected }</p>
+  return <div className={isConnected ? 'dot dot-green' : 'dot dot-red'}></div>
 }

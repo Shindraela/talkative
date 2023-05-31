@@ -1,7 +1,27 @@
 import { useState, useEffect } from 'react'
+import { ConnectionState } from '../sockets/ConnectionState'
 
 export const ChatBar = ({ socket }) => {
 	const [users, setUsers] = useState([])
+	const [isConnected, setIsConnected] = useState(socket.connected)
+
+  useEffect(() => {
+    const onConnect = () => {
+      setIsConnected(true)
+    }
+
+    const onDisconnect = () => {
+      setIsConnected(false)
+    }
+
+    socket.on('connect', onConnect)
+    socket.on('disconnect', onDisconnect)
+
+    return () => {
+      socket.off('connect', onConnect)
+      socket.off('disconnect', onDisconnect)
+    }
+  }, [])
 
   useEffect(() => {
 		socket.on('newUserResponse', (data) => {
@@ -14,10 +34,15 @@ export const ChatBar = ({ socket }) => {
       <h2>Open Chat</h2>
 
       <div>
-        <h4 className="chat__header">ACTIVE USERS</h4>
+				<h4 className="chat__header">ACTIVE USERS</h4>
+
         <div className="chat__users">
-          {users.map((user) => (
-            <p key={user.socketID}>{user.userName}</p>
+					{users.map((user) => (
+						<div className="chat__user__status" key={user.socketID}>
+							<p >{user.userName}</p>
+
+							<ConnectionState isConnected={isConnected} />
+						</div>
           ))}
         </div>
       </div>
