@@ -1,11 +1,14 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
+import SocketContext from '../SocketContext'
 
-export const ChatFooter = ({ socket }) => {
-  const [message, setMessage] = useState('')
+export const ChatFooter = () => {
+	const { socket } = useContext(SocketContext)
+  // const [message, setMessage] = useState('')
+  const [chatMessage, setChatMessage] = useState('')
 
 	const handleTyping = () => {
-		if (message.length > 1) {
-			socket.emit('typing', `${localStorage.getItem('userName')} is typing`)
+		if (chatMessage.length > 1) {
+			socket.emit('typing', `${localStorage.getItem('username')} is typing`)
 		} else {
 			socket.emit('typing', null)
 		}
@@ -13,17 +16,18 @@ export const ChatFooter = ({ socket }) => {
 
   const handleSendMessage = (e) => {
     e.preventDefault()
-
-		if (message.trim() && localStorage.getItem('userName')) {
-      socket.emit('message', {
-        text: message,
-        name: localStorage.getItem('userName'),
+		let content = {}
+		if (chatMessage.trim() && localStorage.getItem('username')) {
+			content = {
+        text: chatMessage,
+        name: localStorage.getItem('username'),
         id: `${socket.id}${Math.random()}`,
-        socketID: socket.id,
-      })
+        userID: socket.id,
+      }
+      socket.emit('message', content)
 		}
 
-    setMessage('')
+    setChatMessage(content)
 	}
 
   return (
@@ -33,8 +37,8 @@ export const ChatFooter = ({ socket }) => {
           type="text"
           placeholder="Write message"
           className="message"
-          value={message}
-					onChange={(e) => setMessage(e.target.value)}
+          value={chatMessage}
+					onChange={(e) => setChatMessage(e.target.value)}
 					onKeyDown={handleTyping}
 				/>
 

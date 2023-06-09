@@ -14,6 +14,17 @@ const client = new MongoClient('mongodb://localhost:27017/?directConnection=true
 let users = []
 let collection
 
+io.use((socket, next) => {
+	const username = socket.handshake.auth.username
+
+  if (!username) {
+    return next(new Error('invalid username'))
+	}
+
+  socket.username = username
+  next()
+})
+
 io.on('connection', (socket) => {
 	socket.on('join', async (roomId) => {
 		try {
@@ -31,6 +42,34 @@ io.on('connection', (socket) => {
 		}
 	})
 
+	/**
+	 * Listen when a new user joins the server
+	 * Add the new user to the list of users
+	 * and send the list of users to the client
+	 */
+	socket.on('newUser', (data) => {
+		const userID = socket.id
+		users.push({ userID, ...data })
+
+    io.to(socket.activeRoom).emit('newUserResponse', users)
+	})
+	
+  // notify existing users
+  socket.broadcast.emit('user connected', {
+    userID: socket.id,
+    username: socket.username,
+    connected: true,
+    messages: [],
+	})
+
+  // forward the private message to the right recipient (and to other tabs of the sender)
+	socket.on('private message', ({ chatMessage, to }) => {
+		socket.to(to).emit('private message', {
+			chatMessage,
+			from: socket.id,
+		})
+	})
+
 	socket.on('message', (data) => {
 		collection.updateOne({ '_id': socket.activeRoom }, {
 			'$push': {
@@ -43,23 +82,11 @@ io.on('connection', (socket) => {
 
 	socket.on('typing', (data) => socket.broadcast.emit('typingResponse', data))
 
-	/**
-	 * Listen when a new user joins the server
-	 * Add the new user to the list of users
-	 * and send the list of users to the client
-	 */
-	socket.on('newUser', (data) => {
-		const socketID = socket.id
-		users.push({ socketID, ...data })
-
-    io.to(socket.activeRoom).emit('newUserResponse', users)
-  })
-
   socket.on('disconnect', () => {
     console.log('🔥: A user disconnected')
     // Update the list of users when a user disconnects from the server
 		// And send the list of users to the client
-		users = users.filter((user) => user.socketID !== socket.id)
+		users = users.filter((user) => user.userID !== socket.id)
 
     io.to(socket.activeRoom).emit('newUserResponse', users)
     socket.disconnect()

@@ -1,10 +1,38 @@
+import { useContext, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import SocketContext from '../SocketContext'
+import ChatContext from '../ChatContext'
 
-export const ChatBody = ({ roomName, messages, typingStatus, lastMessageRef }) => {
+export const ChatBody = () => {
+	const { socket } = useContext(SocketContext)
+	const { roomName, setRoomName, messages, setMessages, typingStatus, setTypingStatus, lastMessageRef } = useContext(ChatContext)
 	const navigate = useNavigate()
 
+  useEffect(() => {
+		socket.on('messageResponse', (data) => setMessages([...messages, data]))
+    socket.on('typingResponse', (data) => setTypingStatus(data))
+
+		// socket.on('joined', (roomId) => {
+		// 	const fetchData = async () => {
+		// 		const result = await fetch('http://localhost:4000/chats?room=' + roomId).then(response => response.json())
+		// 		console.log('joined result :', result)
+
+		// 		if (result.messages.length > 0) {
+		// 			setMessages(result.messages)
+		// 		}
+
+		// 		if (result._id.length > 20) {
+		// 			result._id.shift()
+		// 		}
+		// 		setRoomName(result._id)
+		// 	}
+
+		// 	fetchData()
+		// })
+  }, [socket, messages, setMessages, setRoomName, setTypingStatus])
+
   const handleLeaveChat = () => {
-    localStorage.removeItem('userName')
+    localStorage.removeItem('username')
     navigate('/')
     window.location.reload()
   }
@@ -21,7 +49,7 @@ export const ChatBody = ({ roomName, messages, typingStatus, lastMessageRef }) =
 
       <div className="message__container">
         {messages && messages.map((message) =>
-          message.name === localStorage.getItem('userName') ? (
+          message.name === localStorage.getItem('username') ? (
             <div className="message__chats" key={message.id}>
 							<p className="sender__name">You</p>
 

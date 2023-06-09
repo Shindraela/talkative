@@ -1,19 +1,34 @@
-import { useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Talkative from '../assets/logo_talkative.svg'
+import SocketContext from '../SocketContext'
 
-export const Home = ({ socket }) => {
+export const Home = () => {
+	const { socket } = useContext(SocketContext)
   const navigate = useNavigate()
-	const [userName, setUserName] = useState('')
+	const [username, setUsername] = useState('')
+	const [usernameAlreadySelected, setUsernameAlreadySelected] = useState(false)
+
+	useEffect(() => {
+		socket.on('connect_error', (err) => {
+      if (err.message === 'invalid username') {
+        setUsernameAlreadySelected(false)
+      }
+		})
+
+    return () => socket.off('connect_error')
+	}, [socket, usernameAlreadySelected])
 
   const handleSubmit = (e) => {
     e.preventDefault()
-		localStorage.setItem('userName', userName)
-		socket.emit('newUser', { userName, socketID: socket.id })
+		localStorage.setItem('username', username)
+		const messages = []
+		socket.emit('newUser', { username, userID: socket.id, messages })
     navigate('/chat')
 	}
 
 	const connect = () => {
+		socket.auth = { username }
 		socket.connect()
 		socket.emit('join', 'chats')
 	}
@@ -33,11 +48,11 @@ export const Home = ({ socket }) => {
 					name="username"
 					id="username"
 					className="username__input"
-					value={userName}
-					onChange={(e) => setUserName(e.target.value)}
+					value={username}
+					onChange={(e) => setUsername(e.target.value)}
 				/>
 
-				<button className="home__cta" onClick={ connect }>Connect</button>
+				{!usernameAlreadySelected ? <button className="home__cta" onClick={ connect }>Connect</button> : null}
 			</form>
 		</div>
   )
