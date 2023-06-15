@@ -10,25 +10,7 @@ export const ChatBody = () => {
 
   useEffect(() => {
 		socket.on('messageResponse', (data) => setMessages([...messages, data]))
-    socket.on('typingResponse', (data) => setTypingStatus(data))
-
-		// socket.on('joined', (roomId) => {
-		// 	const fetchData = async () => {
-		// 		const result = await fetch('http://localhost:4000/chats?room=' + roomId).then(response => response.json())
-		// 		console.log('joined result :', result)
-
-		// 		if (result.messages.length > 0) {
-		// 			setMessages(result.messages)
-		// 		}
-
-		// 		if (result._id.length > 20) {
-		// 			result._id.shift()
-		// 		}
-		// 		setRoomName(result._id)
-		// 	}
-
-		// 	fetchData()
-		// })
+		socket.on('typingResponse', (data) => setTypingStatus(data))
   }, [socket, messages, setMessages, setRoomName, setTypingStatus])
 
   const handleLeaveChat = () => {
@@ -48,9 +30,9 @@ export const ChatBody = () => {
       </header>
 
       <div className="message__container">
-        {messages && messages.map((message) =>
+        {messages && messages.map((message, index) =>
           message.name === localStorage.getItem('username') ? (
-            <div className="message__chats" key={message.id}>
+            <div className="message__chats" key={index}>
 							<p className="sender__name">You</p>
 
               <div className="message__sender">
@@ -58,7 +40,7 @@ export const ChatBody = () => {
               </div>
             </div>
           ) : (
-            <div className="message__chats" key={message.id}>
+            <div className="message__chats" key={index}>
               <p>{message.name}</p>
 
 								<div className="message__recipient">

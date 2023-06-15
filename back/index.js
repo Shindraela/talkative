@@ -63,11 +63,8 @@ io.on('connection', (socket) => {
 	})
 
   // forward the private message to the right recipient (and to other tabs of the sender)
-	socket.on('private message', ({ chatMessage, to }) => {
-		socket.to(to).emit('private message', {
-			chatMessage,
-			from: socket.id,
-		})
+	socket.on('private message', data => {
+		io.to(socket.activeRoom).emit('messageResponse', data)
 	})
 
 	socket.on('message', (data) => {
@@ -80,7 +77,9 @@ io.on('connection', (socket) => {
 		io.to(socket.activeRoom).emit('messageResponse', data)
 	})
 
-	socket.on('typing', (data) => socket.broadcast.emit('typingResponse', data))
+	socket.on('typing', (data) => {
+		socket.broadcast.emit('typingResponse', data)
+	})
 
   socket.on('disconnect', () => {
     console.log('🔥: A user disconnected')

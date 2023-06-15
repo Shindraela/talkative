@@ -1,33 +1,39 @@
 import { useContext, useState } from 'react'
 import SocketContext from '../SocketContext'
+import ChatContext from '../ChatContext'
 
 export const ChatFooter = () => {
 	const { socket } = useContext(SocketContext)
-  // const [message, setMessage] = useState('')
-  const [chatMessage, setChatMessage] = useState('')
+	const { selectedUser } = useContext(ChatContext)
+	const [inputText, setChatMessage] = useState('')
+	const userIsEmpty = Object.keys(selectedUser).length <= 0
 
-	const handleTyping = () => {
-		if (chatMessage.length > 1) {
+  const validate = () => inputText.length
+
+  const handleSendMessage = e => {
+    e.preventDefault()
+		let data = {}
+
+		data = {
+			text: inputText,
+			name: localStorage.getItem('username'),
+			userID: socket.id,
+			from: socket.id,
+		}
+
+		socket.emit('private message', data)
+		socket.emit('typing', null)
+    setChatMessage('')
+	}
+
+	const onChatChange = e => {
+		setChatMessage(e.target.value)
+
+		if (e.target.value.length > 0) {
 			socket.emit('typing', `${localStorage.getItem('username')} is typing`)
 		} else {
 			socket.emit('typing', null)
 		}
-	}
-
-  const handleSendMessage = (e) => {
-    e.preventDefault()
-		let content = {}
-		if (chatMessage.trim() && localStorage.getItem('username')) {
-			content = {
-        text: chatMessage,
-        name: localStorage.getItem('username'),
-        id: `${socket.id}${Math.random()}`,
-        userID: socket.id,
-      }
-      socket.emit('message', content)
-		}
-
-    setChatMessage(content)
 	}
 
   return (
@@ -37,12 +43,12 @@ export const ChatFooter = () => {
           type="text"
           placeholder="Write message"
           className="message"
-          value={chatMessage}
-					onChange={(e) => setChatMessage(e.target.value)}
-					onKeyDown={handleTyping}
+          value={inputText}
+					onChange={(e) => onChatChange(e)}
+					disabled={userIsEmpty}
 				/>
 
-        <button className="sendBtn">SEND</button>
+        <button className={`sendBtn ${!validate() ? 'disabled' :  null}`} disabled={!validate()}>SEND</button>
       </form>
     </div>
   )
